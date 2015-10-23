@@ -29,10 +29,12 @@ Vagrant.configure(2) do |config|
         SHELL
       else
         config.vm.provision "shell", inline: <<-SHELL
+          wget http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-SCL-6-5.el6.centos.x86_64.rpm &&
+          wget https://www.softwarecollections.org/en/scls/rhscl/devtoolset-3/epel-6-x86_64/download/rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm &&
+          sudo rpm -ivh centos-release-SCL-6-5.el6.centos.x86_64.rpm &&
+          sudo rpm -ivh rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm
           sudo yum install -y scl-utils &&
-          sudo yum install -y /vagrant/rhscl-python27-epel-6-x86_64-1-2.noarch.rpm \
-          /vagrant/rhscl-devtoolset-3-epel-6-x86_64-1-2.noarch.rpm &&
-          sudo yum install -y git openssl-devel yum-utils rpmdevtools python27
+          sudo yum install -y devtoolset-3-gcc-c++ git openssl-devel yum-utils rpmdevtools python27
         SHELL
       end
 
