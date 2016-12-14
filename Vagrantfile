@@ -1,6 +1,15 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+if not Vagrant.has_plugin?("vagrant-vbguest")
+
+    puts ""
+    puts "please install vagrant-vbguest(https://github.com/dotless-de/vagrant-vbguest) plugin!"
+    puts ""
+
+    exit
+  end
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -11,11 +20,13 @@ Vagrant.configure(2) do |config|
   # https://docs.vagrantup.com.
 
   def createBuildMachine(config, osver, memory_size, cpu_cores)
-      config.vm.box = "CentOS#{osver}"
+      config.vm.box = "centos/#{osver}"
       config.ssh.insert_key = false
       @nodeName = "nodejs-rpm-build-centos#{osver}"
       config.vm.hostname = @nodeName
       config.vm.define @nodeName
+      config.vm.synced_folder ".", "/vagrant", disabled: true
+      config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
       config.vm.provider "virtualbox" do |vb|
         # Display the VirtualBox GUI when booting the machine
         vb.gui = false
@@ -29,23 +40,19 @@ Vagrant.configure(2) do |config|
         SHELL
       else
         config.vm.provision "shell", inline: <<-SHELL
-          wget http://mirror.centos.org/centos/6/extras/x86_64/Packages/centos-release-SCL-6-5.el6.centos.x86_64.rpm &&
-          wget https://www.softwarecollections.org/en/scls/rhscl/devtoolset-3/epel-6-x86_64/download/rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm &&
-          sudo rpm -ivh centos-release-SCL-6-5.el6.centos.x86_64.rpm &&
-          sudo rpm -ivh rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm
-          sudo yum install -y scl-utils &&
-          sudo yum install -y devtoolset-3-gcc-c++ git openssl-devel yum-utils rpmdevtools python27
+          sudo rpm -ivh /vagrant/rhscl-devtoolset-3-epel-6-x86_64.noarch.rpm && sudo yum install -y centos-release-SCL
+          sudo yum clean all
+          sudo yum install -y scl-utils && sudo yum install -y devtoolset-3-gcc-c++ git openssl-devel yum-utils rpmdevtools python27
         SHELL
       end
-
   end
 
   config.vm.define "CentOS7", primary: true do |bm|
     createBuildMachine(bm,7,4096,2)
   end
 
-  config.vm.define "CentOS6.5", autostart: false do |bm|
-    createBuildMachine(bm,6.5,4096,2)
+  config.vm.define "CentOS6", autostart: false do |bm|
+    createBuildMachine(bm,6,4096,2)
   end
 
 end
